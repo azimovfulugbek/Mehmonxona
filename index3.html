@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uzbekistan Hotels — O'zbekiston Mehmonxonalari</title>
+    <style>
+        :root {
+            --primary: #0b3c6d;
+            --primary-light: #155fa0;
+            --accent: #e0b238;
+            --accent-glow: rgba(224, 178, 56, 0.45);
+            --bg: #eef3f8;
+            --card: #ffffff;
+            --text: #162436;
+            --muted: #5c708a;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body {
+            background: radial-gradient(circle at top right, #e2ecf7, var(--bg) 60%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Keyframe Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-7px); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+            50% { box-shadow: 0 0 22px 4px var(--accent-glow); }
+        }
+
+        /* Login Gate Modal */
+        #auth-gate {
+            position: fixed; inset: 0;
+            background: linear-gradient(135deg, #061e36 0%, #0b3c6d 55%, #135896 100%);
+            display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;
+            animation: fadeInUp 0.45s ease;
+        }
+        .gate-box {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(14px);
+            padding: 36px; border-radius: 20px; width: 100%; max-width: 430px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.38); text-align: center;
+            animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        .gate-box h2 { color: var(--primary); margin-bottom: 8px; font-size: 26px; }
+        .gate-box p { color: var(--muted); font-size: 14px; margin-bottom: 22px; }
+        .input-group { text-align: left; margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+        .input-group input, .input-group select {
+            width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px;
+            font-size: 15px; transition: all 0.25s ease; background: #fff;
+        }
+        .input-group input:focus, .input-group select:focus {
+            outline: none; border-color: var(--primary-light);
+            box-shadow: 0 0 0 4px rgba(21, 95, 160, 0.14);
+        }
+        .btn {
+            width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 15px;
+            font-weight: 600; cursor: pointer; transition: all 0.25s ease;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: #fff; margin-bottom: 12px; box-shadow: 0 8px 18px rgba(11, 60, 109, 0.28);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(11, 60, 109, 0.36); }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: #eff6ff; transform: translateY(-2px); }
+        .error-msg { color: var(--danger); font-size: 13px; margin-bottom: 12px; display: none; font-weight: 600; }
+
+        /* Header / Navbar */
+        header {
+            background: rgba(11, 60, 109, 0.92);
+            backdrop-filter: blur(12px);
+            color: #fff; padding: 14px 5%;
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 8px 25px rgba(6, 30, 54, 0.18);
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+        .logo {
+            font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 8px;
+            letter-spacing: 0.4px; animation: floatSlow 4s ease-in-out infinite;
+        }
+        .logo span { color: var(--accent); text-shadow: 0 0 12px var(--accent-glow); }
+        .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .controls select, .controls button {
+            padding: 8px 12px; border-radius: 8px; border: none; font-size: 13.5px;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .controls select {
+            background: #fff; color: var(--text); font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .controls select:hover { transform: translateY(-1px); }
+        .admin-badge {
+            background: linear-gradient(135deg, var(--accent), #f5cf60);
+            color: #0b192c; font-weight: 700; padding: 6px 12px; border-radius: 8px; font-size: 13px;
+            animation: pulseGlow 2.5s infinite;
+        }
+        .logout-btn { background: rgba(255,255,255,0.18); color: #fff; font-weight: 600; }
+        .logout-btn:hover { background: rgba(255,255,255,0.3); transform: translateY(-1px); }
+
+        /* Google Translate Widget Styling */
+        #google_translate_element {
+            background: #fff; padding: 2px 7px; border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; align-items: center;
+        }
+        .goog-te-gadget-simple { border: none !important; font-size: 12.5px !important; background: transparent !important; }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, rgba(6, 30, 54, 0.88), rgba(11, 60, 109, 0.84), rgba(21, 95, 160, 0.82)),
+                        url('https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?auto=format&fit=crop&w=1400&q=80') center/cover;
+            color: #fff; text-align: center; padding: 62px 20px; position: relative;
+            overflow: hidden;
+        }
+        .hero::after {
+            content: ""; position: absolute; inset: 0;
+            background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.06) 50%, transparent 70%);
+            background-size: 200% 100%; animation: shimmer 7s infinite linear; pointer-events: none;
+        }
+        .hero h1 {
+            font-size: 36px; margin-bottom: 12px; position: relative; z-index: 1;
+            animation: fadeInUp 0.6s ease; text-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+        .hero p {
+            font-size: 17px; opacity: 0.94; max-width: 700px; margin: 0 auto 26px; position: relative; z-index: 1;
+            animation: fadeInUp 0.75s ease;
+        }
+        .city-filters {
+            display: flex; justify-content: center; gap: 9px; flex-wrap: wrap;
+            max-width: 1080px; margin: 0 auto; position: relative; z-index: 1;
+            animation: fadeInUp 0.9s ease;
+        }
+        .city-btn {
+            background: rgba(255,255,255,0.14); color: #fff; border: 1px solid rgba(255,255,255,0.28);
+            padding: 8px 16px; border-radius: 22px; cursor: pointer; transition: all 0.25s ease;
+            font-size: 13.5px; backdrop-filter: blur(6px);
+        }
+        .city-btn:hover { transform: translateY(-2px); background: rgba(255,255,255,0.26); }
+        .city-btn.active {
+            background: linear-gradient(135deg, var(--accent), #f5cf60);
+            color: #09182b; font-weight: 700; border-color: var(--accent);
+            box-shadow: 0 6px 18px var(--accent-glow); transform: translateY(-2px);
+        }
+
+        /* Main Container */
+        .container { max-width: 1220px; margin: 36px auto; padding: 0 20px; }
+
+        /* Hotel Grid */
+        .hotels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 26px; }
+        .hotel-card {
+            background: var(--card); border-radius: 18px; overflow: hidden;
+            box-shadow: 0 10px 26px rgba(11, 60, 109, 0.08);
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+            display: flex; flex-direction: column;
+            animation: fadeInUp 0.55s ease both;
+            border: 1px solid rgba(15, 76, 129, 0.07);
+        }
+        .hotel-card:hover {
+            transform: translateY(-8px) scale(1.012);
+            box-shadow: 0 20px 38px rgba(11, 60, 109, 0.16);
+        }
+        .hotel-img-wrap {
+            height: 205px; width: 100%; overflow: hidden; position: relative;
+            background: #dce7f3;
+        }
+        .hotel-img-wrap svg {
+            width: 100%; height: 100%; display: block;
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .hotel-card:hover .hotel-img-wrap svg { transform: scale(1.06); }
+
+        .hotel-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .hotel-city {
+            font-size: 12px; font-weight: 700; color: var(--primary-light);
+            text-transform: uppercase; letter-spacing: 0.6px;
+        }
+        .hotel-title { font-size: 20px; margin: 6px 0 8px; color: var(--text); }
+        .hotel-desc { font-size: 14px; color: var(--muted); margin-bottom: 16px; line-height: 1.55; flex: 1; }
+        .hotel-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-top: 15px; border-top: 1px solid #e6edf5;
+        }
+        .price { font-size: 18px; font-weight: 800; color: var(--primary); }
+        .price span { font-size: 12px; color: var(--muted); font-weight: 500; }
+        .book-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: #fff; border: none; padding: 9px 16px;
+            border-radius: 10px; font-weight: 600; cursor: pointer;
+            transition: all 0.25s ease; box-shadow: 0 4px 12px rgba(11, 60, 109, 0.22);
+        }
+        .book-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(11, 60, 109, 0.32); }
+        .book-btn:active { transform: scale(0.97); }
+
+        /* Booking Modal */
+        .modal {
+            display: none; position: fixed; inset: 0; background: rgba(6, 24, 44, 0.65);
+            backdrop-filter: blur(5px);
+            align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+        }
+        .modal-content {
+            background: #fff; padding: 30px; border-radius: 18px; width: 100%; max-width: 460px; position: relative;
+            animation: fadeInUp 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+        .close-modal {
+            position: absolute; top: 15px; right: 18px; font-size: 24px; cursor: pointer;
+            color: var(--muted); transition: transform 0.2s ease, color 0.2s ease;
+        }
+        .close-modal:hover { color: var(--danger); transform: rotate(90deg); }
+
+        /* Admin Dashboard */
+        #admin-panel { display: none; animation: fadeInUp 0.45s ease; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .table-wrap { background: #fff; border-radius: 16px; overflow-x: auto; box-shadow: 0 10px 28px rgba(11, 60, 109, 0.08); }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 14px 18px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+        th { background: #f8fafc; font-weight: 700; color: var(--primary); }
+        tr { transition: background 0.2s ease; }
+        tbody tr:hover { background: #f4f8fc; }
+        .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .status-new { background: #fef3c7; color: #b45309; }
+        .status-ok { background: #d1fae5; color: #065f46; }
+        .action-btn { padding: 6px 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; margin-right: 5px; transition: transform 0.15s ease; }
+        .action-btn:hover { transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+
+<!-- 1. LOGIN YOKI FOYDALANUVCHI BO'LIB KIRISH OYNASI -->
+<div id="auth-gate">
+    <div class="gate-box">
+        <h2>🇺🇿 Uzbekistan Hotels</h2>
+        <p>Tizimga kirish uchun ma'lumotlarni kiriting yoki mehmon sifatida davom eting</p>
+        <div class="error-msg" id="login-error">Login yoki parol noto'g'ri!</div>
+        <div class="input-group">
+            <label>Admin Login</label>
+            <input type="text" id="admin-user" placeholder="Loginni kiriting">
+        </div>
+        <div class="input-group">
+            <label>Admin Parol</label>
+            <input type="password" id="admin-pass" placeholder="Parolni kiriting">
+        </div>
+        <button class="btn btn-primary" onclick="loginAdmin()">Admin sifatida kirish</button>
+        <button class="btn btn-outline" onclick="continueAsGuest()">Foydalanuvchi bo'lib davom etish</button>
+    </div>
+</div>
+
+<!-- 2. YUQORI PANEL (VALYUTA VA BUTUN DUNYO TILLARI) -->
+<header>
+    <div class="logo">🕌 <span>UZB</span> Hotels</div>
+    <div class="controls">
+        <!-- Valyuta tanlash -->
+        <select id="currency-select" onchange="changeCurrency()">
+            <option value="UZS">🇺🇿 So'm (UZS)</option>
+            <option value="USD">🇺🇸 Dollar (USD)</option>
+            <option value="RUB">🇷🇺 Rubl (RUB)</option>
+        </select>
+
+        <!-- Tezkor jahon tillari tanlovi -->
+        <select id="quick-lang-select" onchange="applyQuickLanguage(this.value)" title="Tilni tanlash">
+            <option value="">🌍 Til (Barcha dunyo tillari)</option>
+            <option value="uz">O'zbekcha</option>
+            <option value="en">English</option>
+            <option value="ru">Русский</option>
+            <option value="tr">Türkçe</option>
+            <option value="ar">العربية</option>
+            <option value="de">Deutsch</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+            <option value="zh-CN">中文 (简体)</option>
+            <option value="ja">日本語</option>
+            <option value="ko">한국어</option>
+            <option value="it">Italiano</option>
+            <option value="hi">हिन्दी</option>
+            <option value="fa">فارسی</option>
+        </select>
+
+        <!-- Google Translate (Butun dunyodagi 100+ til) -->
+        <div id="google_translate_element"></div>
+
+        <span id="role-badge" class="admin-badge" style="display:none;">Admin Panel</span>
+        <button class="logout-btn" onclick="switchAccount()">Chiqish / Login</button>
+    </div>
+</header>
+
+<!-- 3. FOYDALANUVCHI QISMI (MEHMONXONALAR) -->
+<div id="user-view">
+    <section class="hero">
+        <h1>O'zbekistonning eng sara mehmonxonalari</h1>
+        <p>O'zbekistonning barcha viloyatlari, Qoraqalpog'iston va Toshkent shahridagi qulay mehmonxonalarni onlayn band qiling</p>
+        <div class="city-filters">
+            <button class="city-btn active" onclick="filterCity('All', this)">Barchasi</button>
+            <button class="city-btn" onclick="filterCity('Toshkent shahri', this)">Toshkent shahri</button>
+            <button class="city-btn" onclick="filterCity('Toshkent viloyati', this)">Toshkent viloyati</button>
+            <button class="city-btn" onclick="filterCity('Samarqand viloyati', this)">Samarqand</button>
+            <button class="city-btn" onclick="filterCity('Buxoro viloyati', this)">Buxoro</button>
+            <button class="city-btn" onclick="filterCity('Xorazm viloyati', this)">Xorazm (Xiva)</button>
+            <button class="city-btn" onclick="filterCity('Andijon viloyati', this)">Andijon</button>
+            <button class="city-btn" onclick="filterCity('Farg\'ona viloyati', this)">Farg'ona</button>
+            <button class="city-btn" onclick="filterCity('Namangan viloyati', this)">Namangan</button>
+            <button class="city-btn" onclick="filterCity('Qashqadaryo viloyati', this)">Qashqadaryo</button>
+            <button class="city-btn" onclick="filterCity('Surxondaryo viloyati', this)">Surxondaryo</button>
+            <button class="city-btn" onclick="filterCity('Navoiy viloyati', this)">Navoiy</button>
+            <button class="city-btn" onclick="filterCity('Jizzax viloyati', this)">Jizzax</button>
+            <button class="city-btn" onclick="filterCity('Sirdaryo viloyati', this)">Sirdaryo</button>
+            <button class="city-btn" onclick="filterCity('Qoraqalpog\'iston Respublikasi', this)">Qoraqalpog'iston</button>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="hotels-grid" id="hotels-list"></div>
+    </div>
+</div>
+
+<!-- 4. ADMIN PANEL QISMI (BUYURTMALARNI KO'RISH) -->
+<div id="admin-panel" class="container">
+    <div class="admin-header">
+        <h2>📋 Kelib tushgan buyurtmalar ro'yxati</h2>
+        <button class="book-btn" onclick="clearOrders()" style="background: var(--danger);">Barchasini tozalash</button>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Mehmonxona</th>
+                    <th>Mijoz ismi</th>
+                    <th>Aloqa (Tel / Email / Telegram)</th>
+                    <th>Sana va Kun</th>
+                    <th>To'lov summasi</th>
+                    <th>Holati</th>
+                    <th>Amallar</th>
+                </tr>
+            </thead>
+            <tbody id="orders-table-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 5. BUYURTMA BERISH OYNASI (MODAL) -->
+<div class="modal" id="booking-modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h3 id="modal-hotel-name" style="color: var(--primary); margin-bottom: 5px;">Mehmonxona nomi</h3>
+        <p id="modal-hotel-price" style="font-size: 14px; color: var(--muted); margin-bottom: 15px;"></p>
+        
+        <form onsubmit="submitOrder(event)">
+            <div class="input-group">
+                <label>Ism va Familiyangiz *</label>
+                <input type="text" id="cust-name" required placeholder="Masalan: Jasur Karimov">
+            </div>
+            <div class="input-group">
+                <label>Aloqa turi *</label>
+                <select id="contact-type" onchange="updateContactPlaceholder()">
+                    <option value="Telefon">Telefon raqam</option>
+                    <option value="Telegram">Telegram Username (@user)</option>
+                    <option value="Email">E-mail manzil</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label id="contact-label">Telefon raqamingiz *</label>
+                <input type="text" id="cust-contact" required placeholder="+998 90 123 45 67">
+            </div>
+            <div class="input-group">
+                <label>Kirish sanasi va necha kun qolishingiz *</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="date" id="checkin-date" required>
+                    <input type="number" id="stay-days" min="1" max="30" value="1" required placeholder="Kun">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Buyurtmani adminga yuborish</button>
+        </form>
+    </div>
+</div>
+
+<!-- Google Translate Script (Butun dunyodagi tillar uchun) -->
+<script type="text/javascript">
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'uz',
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+        }, 'google_translate_element');
+    }
+
+    function applyQuickLanguage(langCode) {
+        if (!langCode) return;
+        const gtCombo = document.querySelector('.goog-te-combo');
+        if (gtCombo) {
+            gtCombo.value = langCode;
+            gtCombo.dispatchEvent(new Event('change'));
+        } else {
+            document.cookie = `googtrans=/uz/${langCode}; path=/`;
+            location.reload();
+        }
+    }
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+<script>
+    // --- ADMIN LOGIN MA'LUMOTLARI ---
+    const ADMIN_CREDENTIALS = {
+        user: "admin",
+        pass: "uzbekistan2026"
+    };
+
+    // --- VALYUTA KURSLARI (1 USD ga nisbatan) ---
+    const RATES = {
+        UZS: { symbol: "so'm", rate: 12850 },
+        USD: { symbol: "$", rate: 1 },
+        RUB: { symbol: "₽", rate: 96 }
+    };
+    let currentCurrency = 'UZS';
+    let currentCityFilter = 'All';
+    let selectedHotel = null;
+
+    // --- MUALLIFLIK SVG RASM GENERATSIYASI ---
+    function createHotelSvg(theme, badgeText) {
+        const themes = {
+            skyline: { bg1: '#0b3c6d', bg2: '#1d70b8', dome: '#e0b238', accent: '#67e8f9' },
+            samarkand: { bg1: '#0f4c81', bg2: '#2589bd', dome: '#38bdf8', accent: '#facc15' },
+            bukhara: { bg1: '#7c2d12', bg2: '#c2410c', dome: '#fbbf24', accent: '#fde68a' },
+            khiva: { bg1: '#1e3a8a', bg2: '#1d4ed8', dome: '#60a5fa', accent: '#f59e0b' },
+            mountain: { bg1: '#064e3b', bg2: '#059669', dome: '#a7f3d0', accent: '#fde047' },
+            valley: { bg1: '#14532d', bg2: '#16a34a', dome: '#bbf7d0', accent: '#facc15' },
+            steppe: { bg1: '#78350f', bg2: '#d97706', dome: '#fde68a', accent: '#fef08a' },
+            aral: { bg1: '#0c4a6e', bg2: '#0284c7', dome: '#bae6fd', accent: '#fbbf24' }
+        };
+        const t = themes[theme] || themes.skyline;
+        return `
+            <svg viewBox="0 0 400 210" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="g-${theme}-${badgeText.length}" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="${t.bg1}"/>
+                        <stop offset="100%" stop-color="${t.bg2}"/>
+                    </linearGradient>
+                </defs>
+                <rect width="400" height="210" fill="url(#g-${theme}-${badgeText.length})"/>
+                <circle cx="325" cy="48" r="26" fill="${t.accent}" opacity="0.25"/>
+                <circle cx="325" cy="48" r="14" fill="${t.accent}" opacity="0.75"/>
+                <!-- Minora -->
+                <rect x="62" y="55" width="16" height="115" rx="3" fill="#ffffff" opacity="0.88"/>
+                <polygon points="58,55 70,30 82,55" fill="${t.dome}"/>
+                <!-- Markaziy gumbaz va peshtoq -->
+                <rect x="135" y="95" width="130" height="75" rx="6" fill="#ffffff" opacity="0.93"/>
+                <path d="M 155 95 Q 200 35 245 95 Z" fill="${t.dome}"/>
+                <rect x="182" y="122" width="36" height="48" rx="18" fill="${t.bg1}" opacity="0.85"/>
+                <!-- Yon binolar -->
+                <rect x="95" y="115" width="36" height="55" rx="4" fill="#ffffff" opacity="0.72"/>
+                <rect x="269" y="115" width="36" height="55" rx="4" fill="#ffffff" opacity="0.72"/>
+                <!-- Zamin -->
+                <rect x="0" y="170" width="400" height="40" fill="#06182c" opacity="0.45"/>
+                <!-- Yorliq -->
+                <rect x="16" y="16" width="135" height="28" rx="14" fill="rgba(6,24,44,0.6)"/>
+                <text x="83" y="34" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700" font-family="Segoe UI, sans-serif">${badgeText}</text>
+            </svg>
+        `;
+    }
+
+    // --- O'ZBEKISTON MEHMONXONALARI BAZASI (BARCHA VILOYATLAR) ---
+    const hotels = [
+        {
+            id: 1,
+            name: "Hilton Tashkent City",
+            city: "Toshkent shahri",
+            priceUSD: 180,
+            desc: "Toshkent City markazidagi 5 yulduzli hashamatli mehmonxona, SPA va panoramali restoran.",
+            theme: "skyline",
+            badge: "Toshkent"
+        },
+        {
+            id: 2,
+            name: "Hyatt Regency Tashkent",
+            city: "Toshkent shahri",
+            priceUSD: 195,
+            desc: "Poytaxt markazidagi yuqori darajadagi xizmat, yopiq basseyn va biznes markaziga ega mehmonxona.",
+            theme: "skyline",
+            badge: "Toshkent"
+        },
+        {
+            id: 3,
+            name: "Amirsoy Resort Hotel",
+            city: "Toshkent viloyati",
+            priceUSD: 165,
+            desc: "Chotqol tizmasi bag'ridagi tog' kurort mehmonxonasi, toza havo va dam olish maskani.",
+            theme: "mountain",
+            badge: "Toshkent vil."
+        },
+        {
+            id: 4,
+            name: "Silk Road by Minyoun",
+            city: "Samarqand viloyati",
+            priceUSD: 150,
+            desc: "Samarqand turizm markazida joylashgan zamonaviy va sharqona uslubdagi mehmonxona.",
+            theme: "samarkand",
+            badge: "Samarqand"
+        },
+        {
+            id: 5,
+            name: "Registan Plaza Hotel",
+            city: "Samarqand viloyati",
+            priceUSD: 75,
+            desc: "Registon maydoniga yaqin, qulay xonalar va milliy nonushtaga ega shinam mehmonxona.",
+            theme: "samarkand",
+            badge: "Samarqand"
+        },
+        {
+            id: 6,
+            name: "Lyabi House Hotel",
+            city: "Buxoro viloyati",
+            priceUSD: 65,
+            desc: "Eski Buxoro markazida, Labi Hovuz majmuasi yonidagi milliy naqshlar bilan bezatilgan mehmonxona.",
+            theme: "bukhara",
+            badge: "Buxoro"
+        },
+        {
+            id: 7,
+            name: "Orient Star Khiva",
+            city: "Xorazm viloyati",
+            priceUSD: 70,
+            desc: "Ichan Qal'a ichidagi tarixiy Muhammad Aminxon madrasasida joylashgan noyob mehmonxona.",
+            theme: "khiva",
+            badge: "Xorazm"
+        },
+        {
+            id: 8,
+            name: "Bogishamol Hotel Andijan",
+            city: "Andijon viloyati",
+            priceUSD: 55,
+            desc: "Andijon shahrida joylashgan zamonaviy xonalar, qulay xizmat va mehmondo'st muhitga ega mehmonxona.",
+            theme: "valley",
+            badge: "Andijon"
+        },
+        {
+            id: 9,
+            name: "Asia Fergana Hotel",
+            city: "Farg'ona viloyati",
+            priceUSD: 60,
+            desc: "Farg'ona markazida joylashgan shinam mehmonxona, basseyn va milliy taomlar restorani.",
+            theme: "valley",
+            badge: "Farg'ona"
+        },
+        {
+            id: 10,
+            name: "Grand Namangan Hotel",
+            city: "Namangan viloyati",
+            priceUSD: 58,
+            desc: "Namangan shahrida ish safari va oilaviy sayohatlar uchun qulay sharoitlarga ega mehmonxona.",
+            theme: "valley",
+            badge: "Namangan"
+        },
+        {
+            id: 11,
+            name: "Karshi Plaza Hotel",
+            city: "Qashqadaryo viloyati",
+            priceUSD: 55,
+            desc: "Qarshi shahridagi qulay xonalar, konferensiya zali va yuqori xizmat madaniyatiga ega mehmonxona.",
+            theme: "steppe",
+            badge: "Qashqadaryo"
+        },
+        {
+            id: 12,
+            name: "Termiz Grand Hotel",
+            city: "Surxondaryo viloyati",
+            priceUSD: 62,
+            desc: "Termiz shahrida joylashgan zamonaviy mehmonxona, janubiy mehmondo'stlik va barcha qulayliklar.",
+            theme: "steppe",
+            badge: "Surxondaryo"
+        },
+        {
+            id: 13,
+            name: "Grand Zarafshan Hotel",
+            city: "Navoiy viloyati",
+            priceUSD: 68,
+            desc: "Navoiy shahridagi keng va shinam xonalar, dam olish zonasi va qulay joylashuvga ega mehmonxona.",
+            theme: "steppe",
+            badge: "Navoiy"
+        },
+        {
+            id: 14,
+            name: "Zomin Boutique Hotel",
+            city: "Jizzax viloyati",
+            priceUSD: 72,
+            desc: "Jizzax va Zomin yo'nalishida sayohatchilar uchun sokin va qulay sharoitli mehmonxona.",
+            theme: "mountain",
+            badge: "Jizzax"
+        },
+        {
+            id: 15,
+            name: "Guliston Silk Road Hotel",
+            city: "Sirdaryo viloyati",
+            priceUSD: 50,
+            desc: "Guliston shahrida yo'l sayohatchilari va mehmonlar uchun qulay va shinam mehmonxona.",
+            theme: "steppe",
+            badge: "Sirdaryo"
+        },
+        {
+            id: 16,
+            name: "Jipek Joli Inn Nukus",
+            city: "Qoraqalpog'iston Respublikasi",
+            priceUSD: 60,
+            desc: "Nukus shahrida joylashgan, Savitskiy muzeyiga yaqin va qoraqalpoq mehmondo'stligi mujassam mehmonxona.",
+            theme: "aral",
+            badge: "Qoraqalpog'iston"
+        }
+    ];
+
+    // --- NARXNI VALYUTAGA O'GIRISH ---
+    function formatPrice(usdAmount) {
+        const info = RATES[currentCurrency];
+        const converted = Math.round(usdAmount * info.rate);
+        if (currentCurrency === 'USD') return `$${converted}`;
+        return `${converted.toLocaleString('uz-UZ')} ${info.symbol}`;
+    }
+
+    function changeCurrency() {
+        currentCurrency = document.getElementById('currency-select').value;
+        renderHotels(currentCityFilter);
+    }
+
+    // --- MEHMONXONALARNI CHIQARISH ---
+    function renderHotels(cityFilter = 'All') {
+        const list = document.getElementById('hotels-list');
+        list.innerHTML = '';
+
+        const filtered = cityFilter === 'All' ? hotels : hotels.filter(h => h.city === cityFilter);
+
+        filtered.forEach((hotel, idx) => {
+            const card = document.createElement('div');
+            card.className = 'hotel-card';
+            card.style.animationDelay = `${Math.min(idx * 0.05, 0.45)}s`;
+            card.innerHTML = `
+                <div class="hotel-img-wrap">${createHotelSvg(hotel.theme, hotel.badge)}</div>
+                <div class="hotel-body">
+                    <span class="hotel-city">📍 ${hotel.city}, O'zbekiston</span>
+                    <h3 class="hotel-title">${hotel.name}</h3>
+                    <p class="hotel-desc">${hotel.desc}</p>
+                    <div class="hotel-footer">
+                        <div class="price">${formatPrice(hotel.priceUSD)} <span>/ kuniga</span></div>
+                        <button class="book-btn" onclick="openBooking(${hotel.id})">Buyurtma berish</button>
+                    </div>
+                </div>
+            `;
+            list.appendChild(card);
+        });
+    }
+
+    function filterCity(city, btn) {
+        currentCityFilter = city;
+        document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderHotels(city);
+    }
+
+    // --- KIRISH VA ROLNI BOSHQARISH ---
+    function loginAdmin() {
+        const u = document.getElementById('admin-user').value.trim();
+        const p = document.getElementById('admin-pass').value.trim();
+        const err = document.getElementById('login-error');
+
+        if (u === ADMIN_CREDENTIALS.user && p === ADMIN_CREDENTIALS.pass) {
+            err.style.display = 'none';
+            document.getElementById('auth-gate').style.display = 'none';
+            document.getElementById('user-view').style.display = 'none';
+            document.getElementById('admin-panel').style.display = 'block';
+            document.getElementById('role-badge').style.display = 'inline-block';
+            renderOrders();
+        } else {
+            err.style.display = 'block';
+        }
+    }
+
+    function continueAsGuest() {
+        document.getElementById('auth-gate').style.display = 'none';
+        document.getElementById('user-view').style.display = 'block';
+        document.getElementById('admin-panel').style.display = 'none';
+        document.getElementById('role-badge').style.display = 'none';
+        renderHotels(currentCityFilter);
+    }
+
+    function switchAccount() {
+        document.getElementById('admin-user').value = '';
+        document.getElementById('admin-pass').value = '';
+        document.getElementById('login-error').style.display = 'none';
+        document.getElementById('auth-gate').style.display = 'flex';
+    }
+
+    // --- BUYURTMA BERISH (MIJOZ) ---
+    function openBooking(hotelId) {
+        selectedHotel = hotels.find(h => h.id === hotelId);
+        document.getElementById('modal-hotel-name').innerText = selectedHotel.name;
+        document.getElementById('modal-hotel-price').innerText = `Narxi: ${formatPrice(selectedHotel.priceUSD)} (1 kun uchun)`;
+        document.getElementById('booking-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('booking-modal').style.display = 'none';
+    }
+
+    function updateContactPlaceholder() {
+        const type = document.getElementById('contact-type').value;
+        const input = document.getElementById('cust-contact');
+        const label = document.getElementById('contact-label');
+
+        if (type === 'Telefon') {
+            label.innerText = 'Telefon raqamingiz *';
+            input.placeholder = '+998 90 123 45 67';
+        } else if (type === 'Telegram') {
+            label.innerText = 'Telegram username *';
+            input.placeholder = '@username';
+        } else {
+            label.innerText = 'E-mail manzilingiz *';
+            input.placeholder = 'example@mail.com';
+        }
+    }
+
+    function submitOrder(e) {
+        e.preventDefault();
+        const days = parseInt(document.getElementById('stay-days').value) || 1;
+        const totalUSD = selectedHotel.priceUSD * days;
+        const totalFormatted = formatPrice(totalUSD);
+
+        const newOrder = {
+            id: Date.now(),
+            hotel: `${selectedHotel.name} (${selectedHotel.city})`,
+            customer: document.getElementById('cust-name').value,
+            contactType: document.getElementById('contact-type').value,
+            contactValue: document.getElementById('cust-contact').value,
+            date: document.getElementById('checkin-date').value,
+            days: days,
+            total: totalFormatted,
+            status: 'Yangi'
+        };
+
+        const orders = JSON.parse(localStorage.getItem('uzb_hotel_orders') || '[]');
+        orders.unshift(newOrder);
+        localStorage.setItem('uzb_hotel_orders', JSON.stringify(orders));
+
+        alert(`Rahmat, ${newOrder.customer}! Buyurtmangiz muvaffaqiyatli qabul qilindi va adminga yuborildi.`);
+        e.target.reset();
+        closeModal();
+    }
+
+    // --- ADMIN UCHUN BUYURTMALARNI BOSHQARISH ---
+    function renderOrders() {
+        const orders = JSON.parse(localStorage.getItem('uzb_hotel_orders') || '[]');
+        const tbody = document.getElementById('orders-table-body');
+        tbody.innerHTML = '';
+
+        if (orders.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#64748b;">Hozircha buyurtmalar yo'q</td></tr>`;
+            return;
+        }
+
+        orders.forEach((o, index) => {
+            const statusClass = o.status === 'Yangi' ? 'status-new' : 'status-ok';
+            tbody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${o.hotel}</strong></td>
+                    <td>${o.customer}</td>
+                    <td><b>${o.contactType}:</b> ${o.contactValue}</td>
+                    <td>${o.date} (${o.days} kun)</td>
+                    <td><strong>${o.total}</strong></td>
+                    <td><span class="status-badge ${statusClass}">${o.status}</span></td>
+                    <td>
+                        <button class="action-btn" style="background:var(--success); color:#fff;" onclick="confirmOrder(${o.id})">Tasdiqlash</button>
+                        <button class="action-btn" style="background:var(--danger); color:#fff;" onclick="deleteOrder(${o.id})">O'chirish</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function confirmOrder(id) {
+        const orders = JSON.parse(localStorage.getItem('uzb_hotel_orders') || '[]');
+        const idx = orders.findIndex(o => o.id === id);
+        if (idx !== -1) {
+            orders[idx].status = 'Tasdiqlandi';
+            localStorage.setItem('uzb_hotel_orders', JSON.stringify(orders));
+            renderOrders();
+        }
+    }
+
+    function deleteOrder(id) {
+        let orders = JSON.parse(localStorage.getItem('uzb_hotel_orders') || '[]');
+        orders = orders.filter(o => o.id !== id);
+        localStorage.setItem('uzb_hotel_orders', JSON.stringify(orders));
+        renderOrders();
+    }
+
+    function clearOrders() {
+        if (confirm("Barcha buyurtmalarni o'chirmoqchimisiz?")) {
+            localStorage.removeItem('uzb_hotel_orders');
+            renderOrders();
+        }
+    }
+
+    // Dastlabki yuklash
+    renderHotels();
+</script>
+</body>
+</html>
